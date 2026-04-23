@@ -1,0 +1,355 @@
+import { useState } from “react”;
+
+const C = {
+appBg:    “#F1F5F9”,
+surface:  “#FFFFFF”,
+border:   “#E2E8F0”,
+headText: “#0F172A”,
+subText:  “#94A3B8”,
+bodyText: “#334155”,
+accent:   “#F97316”,
+cartBg:   “#F8FAFC”,
+};
+
+const PRODUCTS = [
+{ id: “3dp_big”,  name: “Big 3D Print”,          emoji: “🏰”, price: 5.00, category: “3d”       },
+{ id: “3dp_sml”,  name: “Small 3D Print”,         emoji: “🦕”, price: 3.00, category: “3d”       },
+{ id: “bracelet”, name: “Rainbow Loom Bracelet”,  emoji: “🌈”, price: 5.00, category: “bracelet” },
+{ id: “origami”,  name: “Origami”,                emoji: “🐦”, price: 2.00, category: “origami”  },
+];
+
+const CATS = {
+“3d”:       { color: “#F97316”, bg: “#FFF7ED”, glow: “rgba(249,115,22,0.18)”  },
+“origami”:  { color: “#0EA5E9”, bg: “#F0F9FF”, glow: “rgba(14,165,233,0.18)”  },
+“bracelet”: { color: “#8B5CF6”, bg: “#F5F3FF”, glow: “rgba(139,92,246,0.18)”  },
+};
+
+const BILLS = [{ v: 20, label: “$20” }, { v: 10, label: “$10” }, { v: 5, label: “$5” }, { v: 1, label: “$1” }];
+const COINS = [{ v: 0.25, label: “25¢” }, { v: 0.10, label: “10¢” }, { v: 0.05, label: “5¢” }, { v: 0.01, label: “1¢” }];
+
+function fmt(n) { return “$” + n.toFixed(2); }
+
+function Shell({ children, bg }) {
+return (
+<div style={{ background: bg || C.appBg, minHeight: “100vh”, maxWidth: 560, margin: “0 auto”, display: “flex”, flexDirection: “column”, fontFamily: “Nunito, sans-serif” }}>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+{children}
+</div>
+);
+}
+
+function TopBar({ children }) {
+return (
+<div style={{ background: C.surface, padding: “12px 18px”, display: “flex”, alignItems: “center”, justifyContent: “space-between”, borderBottom: “1.5px solid “ + C.border, boxShadow: “0 1px 8px rgba(0,0,0,.06)” }}>
+{children}
+</div>
+);
+}
+
+function NavBtn({ onClick, children }) {
+return (
+<button onClick={onClick} style={{ background: C.appBg, border: “1.5px solid “ + C.border, borderRadius: 10, padding: “7px 14px”, fontSize: 13, fontWeight: 700, cursor: “pointer”, color: C.bodyText, fontFamily: “Nunito, sans-serif” }}>
+{children}
+</button>
+);
+}
+
+function PressBtn({ onClick, bg, border, shadow, children }) {
+const [p, setP] = useState(false);
+return (
+<button onClick={() => { setP(true); setTimeout(() => setP(false), 140); onClick(); }}
+style={{ background: bg, border: “2px solid “ + border, borderRadius: 14, padding: “12px 4px”, cursor: “pointer”, display: “flex”, flexDirection: “column”, alignItems: “center”, gap: 3, transform: p ? “scale(0.91)” : “scale(1)”, transition: “transform .12s”, boxShadow: “0 3px 10px “ + shadow }}>
+{children}
+</button>
+);
+}
+
+export default function App() {
+const [cart, setCart]           = useState([]);
+const [paid, setPaid]           = useState(0);
+const [screen, setScreen]       = useState(“shop”);
+const [sales, setSales]         = useState([]);
+const [salesOpen, setSalesOpen] = useState(false);
+const [popItem, setPopItem]     = useState(null);
+
+const total  = cart.reduce((s, i) => s + i.price * i.qty, 0);
+const change = Math.max(0, paid - total);
+const canPay = paid > 0 && paid >= total;
+
+function addToCart(p) {
+setPopItem(p.id);
+setTimeout(() => setPopItem(null), 280);
+setCart(prev => {
+const ex = prev.find(i => i.id === p.id);
+return ex ? prev.map(i => i.id === p.id ? { …i, qty: i.qty + 1 } : i)
+: […prev, { …p, qty: 1 }];
+});
+}
+
+function decCart(id) {
+setCart(prev => {
+const item = prev.find(i => i.id === id);
+return item.qty === 1 ? prev.filter(i => i.id !== id)
+: prev.map(i => i.id === id ? { …i, qty: i.qty - 1 } : i);
+});
+}
+
+function addMoney(v) { setPaid(p => Math.round((p + v) * 100) / 100); }
+
+function completeSale() {
+setSales(prev => [{
+id: Date.now(), items: […cart], total, paid, change,
+time: new Date().toLocaleTimeString([], { hour: “2-digit”, minute: “2-digit” })
+}, …prev]);
+setScreen(“receipt”);
+}
+
+function newSale() { setCart([]); setPaid(0); setScreen(“shop”); }
+
+const totalEarned = sales.reduce((s, x) => s + x.total, 0);
+
+/* ── SALES REPORT ── */
+if (salesOpen) return (
+<Shell>
+<TopBar>
+<NavBtn onClick={() => setSalesOpen(false)}>← Back</NavBtn>
+<div style={{ fontSize: 17, fontWeight: 900, color: C.headText, fontFamily: “Nunito, sans-serif” }}>📊 Sales Report</div>
+<div style={{ width: 72 }} />
+</TopBar>
+<div style={{ padding: “14px 16px 0”, display: “flex”, gap: 10 }}>
+{[{ val: sales.length, label: “Transactions”, color: “#0EA5E9” }, { val: fmt(totalEarned), label: “Total Earned”, color: “#16A34A” }].map(s => (
+<div key={s.label} style={{ flex: 1, background: C.surface, borderRadius: 16, padding: “18px 12px”, textAlign: “center”, border: “1.5px solid “ + C.border, boxShadow: “0 2px 8px rgba(0,0,0,.05)” }}>
+<div style={{ fontSize: 30, fontWeight: 900, color: s.color, fontFamily: “Nunito, sans-serif” }}>{s.val}</div>
+<div style={{ fontSize: 11, color: C.subText, fontFamily: “Nunito, sans-serif”, marginTop: 3 }}>{s.label}</div>
+</div>
+))}
+</div>
+<div style={{ padding: “12px 16px 60px”, overflowY: “auto”, display: “flex”, flexDirection: “column”, gap: 10 }}>
+{sales.length === 0 && <div style={{ textAlign: “center”, padding: 40, color: C.subText, fontFamily: “Nunito, sans-serif” }}>No sales yet! Start selling 🎉</div>}
+{sales.map((sale, idx) => (
+<div key={sale.id} style={{ background: C.surface, borderRadius: 16, padding: 14, border: “1.5px solid “ + C.border, boxShadow: “0 2px 8px rgba(0,0,0,.05)” }}>
+<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 8 }}>
+<span style={{ background: C.accent, color: “#fff”, borderRadius: 20, padding: “3px 12px”, fontSize: 12, fontWeight: 700, fontFamily: “Nunito, sans-serif” }}>Sale #{sales.length - idx}</span>
+<span style={{ color: C.subText, fontSize: 12, fontFamily: “Nunito, sans-serif” }}>{sale.time}</span>
+</div>
+{sale.items.map(i => (
+<div key={i.id} style={{ display: “flex”, justifyContent: “space-between”, fontSize: 13, padding: “3px 0”, color: C.bodyText, fontFamily: “Nunito, sans-serif” }}>
+<span>{i.emoji} {i.name} ×{i.qty}</span><span>{fmt(i.price * i.qty)}</span>
+</div>
+))}
+<div style={{ borderTop: “1px dashed “ + C.border, marginTop: 8, paddingTop: 8, display: “flex”, justifyContent: “space-between”, fontWeight: 800, fontSize: 15, color: “#16A34A”, fontFamily: “Nunito, sans-serif” }}>
+<span>Total</span><span>{fmt(sale.total)}</span>
+</div>
+</div>
+))}
+</div>
+</Shell>
+);
+
+/* ── RECEIPT ── */
+if (screen === “receipt”) {
+const s = sales[0];
+return (
+<Shell bg="linear-gradient(160deg,#EFF6FF 0%,#F0FDF4 100%)">
+<div style={{ display: “flex”, flexDirection: “column”, alignItems: “center”, padding: “36px 20px 28px” }}>
+<div style={{ fontSize: 68, lineHeight: 1, marginBottom: 10 }}>🎉</div>
+<div style={{ fontSize: 30, fontWeight: 900, color: C.headText, fontFamily: “Nunito, sans-serif” }}>Sale Complete!</div>
+<div style={{ fontSize: 14, color: C.subText, fontFamily: “Nunito, sans-serif”, marginBottom: 24 }}>Thank you so much!</div>
+<div style={{ background: “#fff”, borderRadius: 22, width: “100%”, maxWidth: 340, padding: “22px”, boxShadow: “0 16px 48px rgba(0,0,0,.12)”, position: “relative”, overflow: “hidden”, border: “1.5px solid “ + C.border }}>
+<div style={{ position: “absolute”, top: 0, left: 0, right: 0, height: 6, background: “repeating-linear-gradient(90deg,#F97316 0 12px,#8B5CF6 12px 24px,#0EA5E9 24px 36px)” }} />
+<div style={{ textAlign: “center”, marginBottom: 14, marginTop: 6 }}>
+<div style={{ fontSize: 11, letterSpacing: 3, color: C.subText, fontFamily: “Nunito, sans-serif”, fontWeight: 700 }}>LALA’S REGISTER</div>
+<div style={{ fontSize: 12, color: C.subText, fontFamily: “Nunito, sans-serif” }}>{s.time}</div>
+</div>
+{s.items.map(i => (
+<div key={i.id} style={{ display: “flex”, justifyContent: “space-between”, fontSize: 14, padding: “5px 0”, borderBottom: “1px solid “ + C.border, fontFamily: “Nunito, sans-serif”, color: C.bodyText }}>
+<span>{i.emoji} {i.name} ×{i.qty}</span>
+<span style={{ fontWeight: 700 }}>{fmt(i.price * i.qty)}</span>
+</div>
+))}
+<div style={{ display: “flex”, justifyContent: “space-between”, fontSize: 20, fontWeight: 900, padding: “12px 0 6px”, fontFamily: “Nunito, sans-serif”, color: C.headText }}>
+<span>TOTAL</span><span style={{ color: C.accent }}>{fmt(s.total)}</span>
+</div>
+<div style={{ display: “flex”, justifyContent: “space-between”, fontSize: 13, color: C.subText, fontFamily: “Nunito, sans-serif”, padding: “3px 0” }}>
+<span>Paid</span><span>{fmt(s.paid)}</span>
+</div>
+<div style={{ display: “flex”, justifyContent: “space-between”, fontSize: 17, fontWeight: 900, background: “#FFFBEB”, border: “1.5px solid #FDE68A”, borderRadius: 12, padding: “12px 14px”, marginTop: 12, fontFamily: “Nunito, sans-serif” }}>
+<span>💵 Change</span><span style={{ color: “#D97706” }}>{fmt(s.change)}</span>
+</div>
+</div>
+<button onClick={newSale} style={{ marginTop: 26, background: “linear-gradient(135deg,#F97316,#FB923C)”, color: “#fff”, border: “none”, borderRadius: 18, padding: “16px 52px”, fontSize: 18, fontWeight: 900, cursor: “pointer”, fontFamily: “Nunito, sans-serif”, boxShadow: “0 8px 24px rgba(249,115,22,.35)” }}>
+🛒 New Sale
+</button>
+<button onClick={() => setSalesOpen(true)} style={{ marginTop: 12, background: “transparent”, color: C.subText, border: “none”, fontSize: 13, cursor: “pointer”, fontFamily: “Nunito, sans-serif” }}>
+View Sales Report →
+</button>
+</div>
+</Shell>
+);
+}
+
+/* ── PAYMENT ── */
+if (screen === “pay”) return (
+<Shell>
+<TopBar>
+<NavBtn onClick={() => setScreen(“shop”)}>← Back</NavBtn>
+<div style={{ fontSize: 17, fontWeight: 900, color: C.headText, fontFamily: “Nunito, sans-serif” }}>💳 Take Payment</div>
+<div style={{ width: 72 }} />
+</TopBar>
+<div style={{ padding: “14px 16px 80px”, display: “flex”, flexDirection: “column”, gap: 12, overflowY: “auto” }}>
+<div style={{ display: “flex”, gap: 10 }}>
+<div style={{ flex: 1, background: C.surface, borderRadius: 18, padding: “14px 16px”, border: “1.5px solid “ + C.border, boxShadow: “0 2px 10px rgba(0,0,0,.05)”, textAlign: “center” }}>
+<div style={{ fontSize: 10, color: C.subText, letterSpacing: 2, fontFamily: “Nunito, sans-serif”, fontWeight: 800 }}>TOTAL DUE</div>
+<div style={{ fontSize: 34, fontWeight: 900, color: C.headText, fontFamily: “Nunito, sans-serif” }}>{fmt(total)}</div>
+</div>
+<div style={{ flex: 1, background: canPay ? “#F0FDF4” : C.surface, borderRadius: 18, padding: “14px 16px”, border: “1.5px solid “ + (canPay ? “#86EFAC” : C.border), boxShadow: “0 2px 10px rgba(0,0,0,.05)”, textAlign: “center”, transition: “all .3s”, position: “relative” }}>
+<div style={{ fontSize: 10, color: C.subText, letterSpacing: 2, fontFamily: “Nunito, sans-serif”, fontWeight: 800 }}>RECEIVED</div>
+<div style={{ fontSize: 34, fontWeight: 900, color: canPay ? “#16A34A” : “#0EA5E9”, fontFamily: “Nunito, sans-serif” }}>{fmt(paid)}</div>
+{paid > 0 && <button onClick={() => setPaid(0)} style={{ position: “absolute”, top: 8, right: 8, background: C.appBg, border: “none”, borderRadius: 8, padding: “2px 8px”, fontSize: 12, cursor: “pointer”, fontFamily: “Nunito, sans-serif”, color: C.bodyText }}>✕</button>}
+</div>
+</div>
+<div style={{ background: canPay ? “linear-gradient(135deg,#FEF3C7,#FDE68A)” : C.surface, borderRadius: 18, padding: “18px 20px”, textAlign: “center”, border: canPay ? “1.5px solid #FCD34D” : “1.5px solid “ + C.border, boxShadow: canPay ? “0 8px 24px rgba(245,158,11,.22)” : “0 2px 8px rgba(0,0,0,.04)”, transition: “all .4s” }}>
+{canPay
+? <><div style={{ fontSize: 11, fontWeight: 800, color: “#92400E”, letterSpacing: 1.5, fontFamily: “Nunito, sans-serif” }}>GIVE BACK TO CUSTOMER 💰</div>
+<div style={{ fontSize: 52, fontWeight: 900, color: “#B45309”, fontFamily: “Nunito, sans-serif”, lineHeight: 1.1 }}>{fmt(change)}</div></>
+: <div style={{ fontSize: 14, color: C.subText, fontFamily: “Nunito, sans-serif”, padding: “6px 0” }}>Add money below to calculate change ↓</div>
+}
+</div>
+<div style={{ fontSize: 11, fontWeight: 800, color: C.subText, letterSpacing: 2, fontFamily: “Nunito, sans-serif” }}>💵 BILLS</div>
+<div style={{ display: “grid”, gridTemplateColumns: “repeat(4,1fr)”, gap: 8 }}>
+{BILLS.map(b => (
+<PressBtn key={b.v} onClick={() => addMoney(b.v)} bg=”#F0FDF4” border=”#86EFAC” shadow=“rgba(22,163,74,0.15)”>
+<span style={{ fontSize: 24 }}>💵</span>
+<span style={{ fontSize: 14, fontWeight: 900, color: “#166534”, fontFamily: “Nunito, sans-serif” }}>{b.label}</span>
+</PressBtn>
+))}
+</div>
+<div style={{ fontSize: 11, fontWeight: 800, color: C.subText, letterSpacing: 2, fontFamily: “Nunito, sans-serif” }}>🪙 COINS</div>
+<div style={{ display: “grid”, gridTemplateColumns: “repeat(4,1fr)”, gap: 8 }}>
+{COINS.map(c => (
+<PressBtn key={c.v} onClick={() => addMoney(c.v)} bg=”#FFFBEB” border=”#FCD34D” shadow=“rgba(180,83,9,0.15)”>
+<span style={{ fontSize: 24 }}>🪙</span>
+<span style={{ fontSize: 14, fontWeight: 900, color: “#92400E”, fontFamily: “Nunito, sans-serif” }}>{c.label}</span>
+</PressBtn>
+))}
+</div>
+<button onClick={completeSale} disabled={!canPay}
+style={{ background: canPay ? “linear-gradient(135deg,#16A34A,#4ADE80)” : “#E2E8F0”, color: canPay ? “#fff” : C.subText, border: “none”, borderRadius: 18, padding: “18px”, fontSize: 18, fontWeight: 900, cursor: canPay ? “pointer” : “not-allowed”, fontFamily: “Nunito, sans-serif”, boxShadow: canPay ? “0 8px 24px rgba(22,163,74,.28)” : “none”, transition: “all .3s” }}>
+✅ Complete Sale!
+</button>
+</div>
+</Shell>
+);
+
+/* ── SHOP (main) — 35/65 split view ── */
+return (
+<Shell>
+{/* Header */}
+<div style={{ background: C.surface, padding: “14px 18px”, display: “flex”, alignItems: “center”, justifyContent: “space-between”, borderBottom: “1.5px solid “ + C.border, boxShadow: “0 1px 8px rgba(0,0,0,.06)” }}>
+<div>
+<div style={{ fontSize: 10, letterSpacing: 3, color: C.subText, fontFamily: “Nunito, sans-serif”, fontWeight: 700 }}>3RD GRADE BOOK FAIR</div>
+<div style={{ fontSize: 22, fontWeight: 900, color: C.headText, fontFamily: “Nunito, sans-serif” }}>🛍️ Lala’s Register</div>
+</div>
+<button onClick={() => setSalesOpen(true)} style={{ background: C.appBg, border: “1.5px solid “ + C.border, borderRadius: 12, padding: “8px 14px”, color: C.bodyText, fontSize: 13, fontWeight: 700, cursor: “pointer”, fontFamily: “Nunito, sans-serif” }}>
+📊 Sales
+</button>
+</div>
+
+```
+  {/* Body: left 35% products | right 65% order */}
+  <div style={{ display: "flex", flex: 1, height: "calc(100vh - 65px)", overflow: "hidden" }}>
+
+    {/* LEFT — product column (35%) */}
+    <div style={{ width: "35%", background: C.appBg, display: "flex", flexDirection: "column", gap: 10, padding: "14px 10px", overflowY: "auto", borderRight: "1.5px solid " + C.border }}>
+      {PRODUCTS.map(p => {
+        const meta = CATS[p.category];
+        const inCart = cart.find(i => i.id === p.id);
+        const popping = popItem === p.id;
+        return (
+          <button key={p.id} onClick={() => addToCart(p)}
+            style={{
+              background: inCart ? meta.bg : C.surface,
+              border: "2px solid " + (inCart ? meta.color : C.border),
+              borderRadius: 16, padding: "14px 8px", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+              position: "relative", transition: "all .15s",
+              transform: popping ? "scale(0.93)" : "scale(1)",
+              boxShadow: inCart ? "0 4px 14px " + meta.glow : "0 2px 6px rgba(0,0,0,.06)",
+              flex: "0 0 auto",
+            }}>
+            {inCart && (
+              <div style={{ position: "absolute", top: -9, right: -9, width: 24, height: 24, background: meta.color, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#fff", fontFamily: "Nunito, sans-serif", boxShadow: "0 2px 6px " + meta.glow }}>
+                {inCart.qty}
+              </div>
+            )}
+            <span style={{ fontSize: 34 }}>{p.emoji}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: C.headText, textAlign: "center", lineHeight: 1.25, fontFamily: "Nunito, sans-serif" }}>{p.name}</span>
+            <div style={{ background: meta.color, color: "#fff", borderRadius: 20, padding: "3px 12px", fontSize: 13, fontWeight: 900, fontFamily: "Nunito, sans-serif" }}>
+              {fmt(p.price)}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+
+    {/* RIGHT — order panel (65%) */}
+    <div style={{ width: "65%", background: C.surface, display: "flex", flexDirection: "column" }}>
+
+      {/* Order header */}
+      <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid " + C.border, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: C.subText, fontFamily: "Nunito, sans-serif", letterSpacing: 1.5 }}>🛒 CURRENT ORDER</span>
+        {cart.length > 0 && (
+          <button onClick={() => setCart([])} style={{ background: "#FEF2F2", border: "1.5px solid #FECACA", borderRadius: 8, padding: "3px 10px", color: "#DC2626", fontSize: 11, cursor: "pointer", fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>
+            🗑 Clear
+          </button>
+        )}
+      </div>
+
+      {/* Line items */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", background: C.cartBg }}>
+        {cart.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "28px 8px", color: "#CBD5E1", fontSize: 12, fontFamily: "Nunito, sans-serif", lineHeight: 1.7 }}>
+            Tap an item to get started!
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {cart.map(item => {
+              const meta = CATS[item.category];
+              return (
+                <div key={item.id} style={{ background: C.surface, borderRadius: 14, padding: "10px 12px", border: "1.5px solid " + C.border, borderLeft: "4px solid " + meta.color, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 20 }}>{item.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: C.headText, fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+                    <div style={{ fontSize: 10, color: C.subText, fontFamily: "Nunito, sans-serif" }}>{fmt(item.price)} each</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", background: C.appBg, borderRadius: 9, border: "1px solid " + C.border, overflow: "hidden" }}>
+                    <button onClick={() => decCart(item.id)} style={{ width: 28, height: 28, background: "none", border: "none", color: C.bodyText, fontSize: 17, cursor: "pointer", fontWeight: 900 }}>−</button>
+                    <span style={{ fontSize: 13, fontWeight: 900, color: C.headText, padding: "0 6px", fontFamily: "Nunito, sans-serif" }}>{item.qty}</span>
+                    <button onClick={() => addToCart(item)} style={{ width: 28, height: 28, background: "none", border: "none", color: C.bodyText, fontSize: 17, cursor: "pointer", fontWeight: 900 }}>+</button>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: meta.color, fontFamily: "Nunito, sans-serif", minWidth: 40, textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Total + Pay */}
+      <div style={{ padding: "12px 14px 18px", borderTop: "1.5px solid " + C.border, background: C.surface, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ flex: "0 0 auto" }}>
+          <div style={{ fontSize: 10, color: C.subText, fontFamily: "Nunito, sans-serif", fontWeight: 800, letterSpacing: 1.5 }}>TOTAL</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: C.headText, fontFamily: "Nunito, sans-serif", lineHeight: 1.1 }}>{fmt(total)}</div>
+        </div>
+        <button onClick={() => cart.length > 0 && setScreen("pay")}
+          style={{ flex: 1, background: cart.length > 0 ? "linear-gradient(135deg,#F97316,#FB923C)" : C.appBg, border: "none", borderRadius: 14, padding: "15px 10px", fontSize: 15, fontWeight: 900, color: cart.length > 0 ? "#fff" : C.subText, cursor: cart.length > 0 ? "pointer" : "default", fontFamily: "Nunito, sans-serif", boxShadow: cart.length > 0 ? "0 6px 20px rgba(249,115,22,.32)" : "none", transition: "all .3s" }}>
+          {cart.length > 0 ? "💳 Charge " + fmt(total) : "Add Items First"}
+        </button>
+      </div>
+    </div>
+  </div>
+</Shell>
+```
+
+);
+}
