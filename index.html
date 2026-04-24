@@ -1,13 +1,443 @@
 <!DOCTYPE html>
 
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lala's Register</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lala's Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F1F5F9; font-family: 'Nunito', sans-serif; }
+    button { font-family: 'Nunito', sans-serif; }
+
+```
+#app { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: #F1F5F9; }
+
+/* Header */
+.header { background: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #E2E8F0; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
+.header-sub { font-size: 10px; letter-spacing: 3px; color: #94A3B8; font-weight: 700; }
+.header-title { font-size: 22px; font-weight: 900; color: #0F172A; }
+.sales-btn { background: #F1F5F9; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 8px 14px; color: #334155; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+/* Split layout */
+.split { display: flex; flex: 1; height: calc(100vh - 65px); overflow: hidden; }
+
+/* Left panel */
+.products { width: 35%; background: #F1F5F9; display: flex; flex-direction: column; gap: 10px; padding: 14px 10px; overflow-y: auto; border-right: 1.5px solid #E2E8F0; }
+.product-btn { background: #fff; border: 2px solid #E2E8F0; border-radius: 16px; padding: 14px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; transition: all .15s; }
+.product-btn:active { transform: scale(0.93); }
+.product-btn.in-cart { border-color: var(--cat-color); box-shadow: 0 4px 14px var(--cat-glow); background: var(--cat-bg); }
+.product-emoji { font-size: 34px; }
+.product-name { font-size: 11px; font-weight: 800; color: #0F172A; text-align: center; line-height: 1.25; }
+.product-price { color: #fff; border-radius: 20px; padding: 3px 12px; font-size: 13px; font-weight: 900; background: var(--cat-color); }
+.qty-badge { position: absolute; top: -9px; right: -9px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #fff; background: var(--cat-color); box-shadow: 0 2px 6px var(--cat-glow); }
+
+/* Right panel */
+.order-panel { width: 65%; background: #fff; display: flex; flex-direction: column; }
+.order-header { padding: 10px 14px 8px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; }
+.order-label { font-size: 11px; font-weight: 800; color: #94A3B8; letter-spacing: 1.5px; }
+.clear-btn { background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 8px; padding: 3px 10px; color: #DC2626; font-size: 11px; cursor: pointer; font-weight: 700; }
+.order-items { flex: 1; overflow-y: auto; padding: 10px 12px; background: #F8FAFC; }
+.empty-msg { text-align: center; padding: 28px 8px; color: #CBD5E1; font-size: 12px; line-height: 1.7; }
+.cart-item { background: #fff; border-radius: 14px; padding: 10px 12px; border: 1.5px solid #E2E8F0; border-left: 4px solid var(--cat-color); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.item-emoji { font-size: 20px; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 12px; font-weight: 800; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-price-each { font-size: 10px; color: #94A3B8; }
+.qty-controls { display: flex; align-items: center; background: #F1F5F9; border-radius: 9px; border: 1px solid #E2E8F0; overflow: hidden; }
+.qty-btn { width: 28px; height: 28px; background: none; border: none; color: #334155; font-size: 17px; cursor: pointer; font-weight: 900; }
+.qty-num { font-size: 13px; font-weight: 900; color: #0F172A; padding: 0 6px; }
+.item-total { font-size: 13px; font-weight: 900; min-width: 40px; text-align: right; color: var(--cat-color); }
+
+/* Footer */
+.order-footer { padding: 12px 14px 18px; border-top: 1.5px solid #E2E8F0; background: #fff; display: flex; align-items: center; gap: 12px; }
+.total-label { font-size: 10px; color: #94A3B8; font-weight: 800; letter-spacing: 1.5px; }
+.total-amount { font-size: 26px; font-weight: 900; color: #0F172A; line-height: 1.1; }
+.charge-btn { flex: 1; border: none; border-radius: 14px; padding: 15px 10px; font-size: 15px; font-weight: 900; cursor: pointer; transition: all .3s; }
+.charge-btn.active { background: linear-gradient(135deg,#F97316,#FB923C); color: #fff; box-shadow: 0 6px 20px rgba(249,115,22,.32); }
+.charge-btn.inactive { background: #F1F5F9; color: #94A3B8; cursor: default; }
+
+/* Payment screen */
+.pay-screen { padding: 14px 16px 80px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.totals-row { display: flex; gap: 10px; }
+.total-card { flex: 1; background: #fff; border-radius: 18px; padding: 14px 16px; border: 1.5px solid #E2E8F0; text-align: center; }
+.total-card.received { transition: all .3s; }
+.card-label { font-size: 10px; color: #94A3B8; letter-spacing: 2px; font-weight: 800; }
+.card-value { font-size: 34px; font-weight: 900; color: #0F172A; }
+.clear-paid { position: absolute; top: 8px; right: 8px; background: #F1F5F9; border: none; border-radius: 8px; padding: 2px 8px; font-size: 12px; cursor: pointer; color: #334155; }
+.change-box { border-radius: 18px; padding: 18px 20px; text-align: center; transition: all .4s; }
+.change-box.waiting { background: #fff; border: 1.5px solid #E2E8F0; }
+.change-box.ready { background: linear-gradient(135deg,#FEF3C7,#FDE68A); border: 1.5px solid #FCD34D; box-shadow: 0 8px 24px rgba(245,158,11,.22); }
+.change-hint { font-size: 14px; color: #94A3B8; padding: 6px 0; }
+.change-cta { font-size: 11px; font-weight: 800; color: #92400E; letter-spacing: 1.5px; }
+.change-amount { font-size: 52px; font-weight: 900; color: #B45309; line-height: 1.1; }
+.money-label { font-size: 11px; font-weight: 800; color: #94A3B8; letter-spacing: 2px; }
+.money-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.money-btn { border-radius: 14px; padding: 12px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: transform .12s; }
+.money-btn:active { transform: scale(0.91); }
+.money-btn.bill { background: #F0FDF4; border: 2px solid #86EFAC; box-shadow: 0 3px 10px rgba(22,163,74,0.15); }
+.money-btn.coin { background: #FFFBEB; border: 2px solid #FCD34D; box-shadow: 0 3px 10px rgba(180,83,9,0.15); }
+.money-emoji { font-size: 24px; }
+.money-val-bill { font-size: 14px; font-weight: 900; color: #166534; }
+.money-val-coin { font-size: 14px; font-weight: 900; color: #92400E; }
+.complete-btn { border: none; border-radius: 18px; padding: 18px; font-size: 18px; font-weight: 900; transition: all .3s; }
+.complete-btn.active { background: linear-gradient(135deg,#16A34A,#4ADE80); color: #fff; cursor: pointer; box-shadow: 0 8px 24px rgba(22,163,74,.28); }
+.complete-btn.inactive { background: #E2E8F0; color: #94A3B8; cursor: not-allowed; }
+
+/* Receipt */
+.receipt-screen { display: flex; flex-direction: column; align-items: center; padding: 36px 20px 28px; background: linear-gradient(160deg,#EFF6FF 0%,#F0FDF4 100%); min-height: 100vh; }
+.receipt-emoji { font-size: 68px; line-height: 1; margin-bottom: 10px; }
+.receipt-title { font-size: 30px; font-weight: 900; color: #0F172A; }
+.receipt-sub { font-size: 14px; color: #94A3B8; margin-bottom: 24px; }
+.receipt-card { background: #fff; border-radius: 22px; width: 100%; max-width: 340px; padding: 22px; box-shadow: 0 16px 48px rgba(0,0,0,.12); position: relative; overflow: hidden; border: 1.5px solid #E2E8F0; }
+.receipt-stripe { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: repeating-linear-gradient(90deg,#F97316 0 12px,#8B5CF6 12px 24px,#0EA5E9 24px 36px); }
+.receipt-shop { font-size: 11px; letter-spacing: 3px; color: #94A3B8; font-weight: 700; text-align: center; margin-top: 6px; }
+.receipt-time { font-size: 12px; color: #94A3B8; text-align: center; margin-bottom: 14px; }
+.receipt-row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-bottom: 1px solid #E2E8F0; color: #334155; }
+.receipt-total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: 900; padding: 12px 0 6px; color: #0F172A; }
+.receipt-paid-row { display: flex; justify-content: space-between; font-size: 13px; color: #94A3B8; padding: 3px 0; }
+.receipt-change-row { display: flex; justify-content: space-between; font-size: 17px; font-weight: 900; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
+.new-sale-btn { margin-top: 26px; background: linear-gradient(135deg,#F97316,#FB923C); color: #fff; border: none; border-radius: 18px; padding: 16px 52px; font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 24px rgba(249,115,22,.35); }
+.view-report-btn { margin-top: 12px; background: transparent; color: #94A3B8; border: none; font-size: 13px; cursor: pointer; }
+
+/* Sales report */
+.report-screen { display: flex; flex-direction: column; min-height: 100vh; background: #F1F5F9; }
+.report-stats { padding: 14px 16px 0; display: flex; gap: 10px; }
+.stat-card { flex: 1; background: #fff; border-radius: 16px; padding: 18px 12px; text-align: center; border: 1.5px solid #E2E8F0; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.stat-val { font-size: 30px; font-weight: 900; }
+.stat-label { font-size: 11px; color: #94A3B8; margin-top: 3px; }
+.sales-list { padding: 12px 16px 60px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.sale-card { background: #fff; border-radius: 16px; padding: 14px; border: 1.5px solid #E2E8F0; }
+.sale-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sale-badge { background: #F97316; color: #fff; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 700; }
+.sale-time { color: #94A3B8; font-size: 12px; }
+.sale-item-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: #334155; }
+.sale-total-row { border-top: 1px dashed #E2E8F0; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-weight: 800; font-size: 15px; color: #16A34A; }
+.no-sales { text-align: center; padding: 40px; color: #94A3B8; }
+
+/* Top bar for sub-screens */
+.top-bar { background: #fff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #E2E8F0; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
+.top-bar-title { font-size: 17px; font-weight: 900; color: #0F172A; }
+.back-btn { background: #F1F5F9; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; color: #334155; }
+```
+
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  const PRODUCTS = [
+    { id:"3dp_big",  name:"Big 3D Print",          emoji:"🏰", price:5.00, category:"3d"       },
+    { id:"3dp_sml",  name:"Small 3D Print",         emoji:"🦕", price:3.00, category:"3d"       },
+    { id:"bracelet", name:"Rainbow Loom Bracelet",  emoji:"🌈", price:5.00, category:"bracelet" },
+    { id:"origami",  name:"Origami",                emoji:"🐦", price:2.00, category:"origami"  },
+  ];
+  const CATS = {
+    "3d":      { color:"#F97316", bg:"#FFF7ED", glow:"rgba(249,115,22,0.18)" },
+    "origami": { color:"#0EA5E9", bg:"#F0F9FF", glow:"rgba(14,165,233,0.18)" },
+    "bracelet":{ color:"#8B5CF6", bg:"#F5F3FF", glow:"rgba(139,92,246,0.18)" },
+  };
+  const BILLS = [{v:20,l:"$20"},{v:10,l:"$10"},{v:5,l:"$5"},{v:1,l:"$1"}];
+  const COINS = [{v:0.25,l:"25¢"},{v:0.10,l:"10¢"},{v:0.05,l:"5¢"},{v:0.01,l:"1¢"}];
+
+let state = { cart:[], paid:0, screen:“shop”, sales:[], salesOpen:false };
+
+const fmt = n => “$” + n.toFixed(2);
+const total = () => state.cart.reduce((s,i) => s+i.price*i.qty, 0);
+const change = () => Math.max(0, state.paid - total());
+const canPay = () => state.paid > 0 && state.paid >= total();
+
+function render() {
+const app = document.getElementById(“app”);
+app.innerHTML = “”;
+if (state.salesOpen) { app.appendChild(renderSales()); return; }
+if (state.screen === “receipt”) { app.appendChild(renderReceipt()); return; }
+if (state.screen === “pay”) { app.appendChild(renderPay()); return; }
+app.appendChild(renderShop());
+}
+
+function el(tag, attrs, …children) {
+const e = document.createElement(tag);
+for (const [k,v] of Object.entries(attrs||{})) {
+if (k === “class”) e.className = v;
+else if (k === “style”) Object.assign(e.style, v);
+else if (k.startsWith(“on”)) e.addEventListener(k.slice(2).toLowerCase(), v);
+else e.setAttribute(k, v);
+}
+for (const c of children) {
+if (c == null) continue;
+e.appendChild(typeof c === “string” ? document.createTextNode(c) : c);
+}
+return e;
+}
+
+function topBar(title, onBack) {
+return el(“div”, {class:“top-bar”},
+el(“button”, {class:“back-btn”, onClick: onBack}, “← Back”),
+el(“div”, {class:“top-bar-title”}, title),
+el(“div”, {style:{width:“72px”}})
+);
+}
+
+function renderShop() {
+const wrap = el(“div”, {id:“app-inner”, style:{maxWidth:“560px”,margin:“0 auto”,minHeight:“100vh”,display:“flex”,flexDirection:“column”,background:”#F1F5F9”}});
+
+```
+const header = el("div", {class:"header"},
+  el("div", {},
+    el("div", {class:"header-sub"}, "3RD GRADE BOOK FAIR"),
+    el("div", {class:"header-title"}, "🛍️ Lala's Register")
+  ),
+  el("button", {class:"sales-btn", onClick:()=>{ state.salesOpen=true; render(); }}, "📊 Sales")
+);
+
+const split = el("div", {class:"split"});
+
+// LEFT products
+const products = el("div", {class:"products"});
+for (const p of PRODUCTS) {
+  const meta = CATS[p.category];
+  const inCart = state.cart.find(i=>i.id===p.id);
+  const btn = el("div", {class:"product-btn"+(inCart?" in-cart":""), style:{"--cat-color":meta.color,"--cat-bg":meta.bg,"--cat-glow":meta.glow}});
+  if (inCart) btn.appendChild(el("div", {class:"qty-badge", style:{"--cat-color":meta.color,"--cat-glow":meta.glow}}, String(inCart.qty)));
+  btn.appendChild(el("div", {class:"product-emoji"}, p.emoji));
+  btn.appendChild(el("div", {class:"product-name"}, p.name));
+  btn.appendChild(el("div", {class:"product-price", style:{"--cat-color":meta.color}}, fmt(p.price)));
+  btn.addEventListener("click", () => {
+    const ex = state.cart.find(i=>i.id===p.id);
+    if (ex) state.cart = state.cart.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i);
+    else state.cart = [...state.cart, {...p, qty:1}];
+    render();
+  });
+  products.appendChild(btn);
+}
+
+// RIGHT order
+const orderPanel = el("div", {class:"order-panel"});
+const orderHeader = el("div", {class:"order-header"},
+  el("span", {class:"order-label"}, "🛒 CURRENT ORDER")
+);
+if (state.cart.length > 0) {
+  orderHeader.appendChild(el("button", {class:"clear-btn", onClick:()=>{ state.cart=[]; render(); }}, "🗑 Clear"));
+}
+
+const orderItems = el("div", {class:"order-items"});
+if (state.cart.length === 0) {
+  orderItems.appendChild(el("div", {class:"empty-msg"}, "Tap an item to get started!"));
+} else {
+  for (const item of state.cart) {
+    const meta = CATS[item.category];
+    const row = el("div", {class:"cart-item", style:{"--cat-color":meta.color}});
+    row.appendChild(el("span", {class:"item-emoji"}, item.emoji));
+    const info = el("div", {class:"item-info"});
+    info.appendChild(el("div", {class:"item-name"}, item.name));
+    info.appendChild(el("div", {class:"item-price-each"}, fmt(item.price)+" each"));
+    const qtyCtrl = el("div", {class:"qty-controls"});
+    const minusBtn = el("button", {class:"qty-btn"}, "−");
+    minusBtn.addEventListener("click", () => {
+      if (item.qty === 1) state.cart = state.cart.filter(i=>i.id!==item.id);
+      else state.cart = state.cart.map(i=>i.id===item.id?{...i,qty:i.qty-1}:i);
+      render();
+    });
+    const plusBtn = el("button", {class:"qty-btn"}, "+");
+    plusBtn.addEventListener("click", () => {
+      state.cart = state.cart.map(i=>i.id===item.id?{...i,qty:i.qty+1}:i);
+      render();
+    });
+    qtyCtrl.appendChild(minusBtn);
+    qtyCtrl.appendChild(el("span", {class:"qty-num"}, String(item.qty)));
+    qtyCtrl.appendChild(plusBtn);
+    row.appendChild(info);
+    row.appendChild(qtyCtrl);
+    row.appendChild(el("span", {class:"item-total", style:{"--cat-color":meta.color}}, fmt(item.price*item.qty)));
+    orderItems.appendChild(row);
+  }
+}
+
+const t = total();
+const chargeBtn = el("button", {class:"charge-btn "+(state.cart.length>0?"active":"inactive")},
+  state.cart.length>0 ? "💳 Charge "+fmt(t) : "Add Items First"
+);
+if (state.cart.length>0) chargeBtn.addEventListener("click", ()=>{ state.screen="pay"; render(); });
+
+const footer = el("div", {class:"order-footer"},
+  el("div", {},
+    el("div", {class:"total-label"}, "TOTAL"),
+    el("div", {class:"total-amount"}, fmt(t))
+  ),
+  chargeBtn
+);
+
+orderPanel.appendChild(orderHeader);
+orderPanel.appendChild(orderItems);
+orderPanel.appendChild(footer);
+split.appendChild(products);
+split.appendChild(orderPanel);
+wrap.appendChild(header);
+wrap.appendChild(split);
+return wrap;
+```
+
+}
+
+function renderPay() {
+const wrap = el(“div”, {style:{maxWidth:“560px”,margin:“0 auto”,minHeight:“100vh”,display:“flex”,flexDirection:“column”,background:”#F1F5F9”}});
+wrap.appendChild(topBar(“💳 Take Payment”, ()=>{ state.screen=“shop”; render(); }));
+
+```
+const screen = el("div", {class:"pay-screen"});
+const t = total();
+const c = change();
+const cp = canPay();
+
+// Totals row
+const totalsRow = el("div", {class:"totals-row"});
+totalsRow.appendChild(el("div", {class:"total-card"},
+  el("div", {class:"card-label"}, "TOTAL DUE"),
+  el("div", {class:"card-value"}, fmt(t))
+));
+const recCard = el("div", {class:"total-card received", style:{background:cp?"#F0FDF4":"#fff", border:"1.5px solid "+(cp?"#86EFAC":"#E2E8F0"), position:"relative"}});
+recCard.appendChild(el("div", {class:"card-label"}, "RECEIVED"));
+recCard.appendChild(el("div", {class:"card-value", style:{color:cp?"#16A34A":"#0EA5E9"}}, fmt(state.paid)));
+if (state.paid > 0) {
+  const clrBtn = el("button", {class:"clear-paid"}, "✕");
+  clrBtn.addEventListener("click", ()=>{ state.paid=0; render(); });
+  recCard.appendChild(clrBtn);
+}
+totalsRow.appendChild(recCard);
+screen.appendChild(totalsRow);
+
+// Change box
+const changeBox = el("div", {class:"change-box "+(cp?"ready":"waiting")});
+if (cp) {
+  changeBox.appendChild(el("div", {class:"change-cta"}, "GIVE BACK TO CUSTOMER 💰"));
+  changeBox.appendChild(el("div", {class:"change-amount"}, fmt(c)));
+} else {
+  changeBox.appendChild(el("div", {class:"change-hint"}, "Add money below to calculate change ↓"));
+}
+screen.appendChild(changeBox);
+
+// Bills
+screen.appendChild(el("div", {class:"money-label"}, "💵 BILLS"));
+const billGrid = el("div", {class:"money-grid"});
+for (const b of BILLS) {
+  const btn = el("button", {class:"money-btn bill"});
+  btn.appendChild(el("span", {class:"money-emoji"}, "💵"));
+  btn.appendChild(el("span", {class:"money-val-bill"}, b.l));
+  btn.addEventListener("click", ()=>{ state.paid = Math.round((state.paid+b.v)*100)/100; render(); });
+  billGrid.appendChild(btn);
+}
+screen.appendChild(billGrid);
+
+// Coins
+screen.appendChild(el("div", {class:"money-label"}, "🪙 COINS"));
+const coinGrid = el("div", {class:"money-grid"});
+for (const c2 of COINS) {
+  const btn = el("button", {class:"money-btn coin"});
+  btn.appendChild(el("span", {class:"money-emoji"}, "🪙"));
+  btn.appendChild(el("span", {class:"money-val-coin"}, c2.l));
+  btn.addEventListener("click", ()=>{ state.paid = Math.round((state.paid+c2.v)*100)/100; render(); });
+  coinGrid.appendChild(btn);
+}
+screen.appendChild(coinGrid);
+
+const completeBtn = el("button", {class:"complete-btn "+(cp?"active":"inactive")}, "✅ Complete Sale!");
+if (cp) completeBtn.addEventListener("click", ()=>{
+  state.sales = [{ id:Date.now(), items:[...state.cart], total:t, paid:state.paid, change:c, time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) }, ...state.sales];
+  state.screen = "receipt";
+  render();
+});
+screen.appendChild(completeBtn);
+wrap.appendChild(screen);
+return wrap;
+```
+
+}
+
+function renderReceipt() {
+const s = state.sales[0];
+const wrap = el(“div”, {class:“receipt-screen”});
+wrap.appendChild(el(“div”, {class:“receipt-emoji”}, “🎉”));
+wrap.appendChild(el(“div”, {class:“receipt-title”}, “Sale Complete!”));
+wrap.appendChild(el(“div”, {class:“receipt-sub”}, “Thank you so much!”));
+
+```
+const card = el("div", {class:"receipt-card"});
+card.appendChild(el("div", {class:"receipt-stripe"}));
+card.appendChild(el("div", {class:"receipt-shop"}, "LALA'S REGISTER"));
+card.appendChild(el("div", {class:"receipt-time"}, s.time));
+for (const i of s.items) {
+  const row = el("div", {class:"receipt-row"});
+  row.appendChild(el("span", {}, i.emoji+" "+i.name+" x"+i.qty));
+  row.appendChild(el("span", {style:{fontWeight:"700"}}, fmt(i.price*i.qty)));
+  card.appendChild(row);
+}
+const totRow = el("div", {class:"receipt-total-row"});
+totRow.appendChild(el("span", {}, "TOTAL"));
+totRow.appendChild(el("span", {style:{color:"#F97316"}}, fmt(s.total)));
+card.appendChild(totRow);
+const paidRow = el("div", {class:"receipt-paid-row"});
+paidRow.appendChild(el("span",{},"Paid")); paidRow.appendChild(el("span",{},fmt(s.paid)));
+card.appendChild(paidRow);
+const chgRow = el("div", {class:"receipt-change-row"});
+chgRow.appendChild(el("span",{},"💵 Change")); chgRow.appendChild(el("span",{style:{color:"#D97706"}},fmt(s.change)));
+card.appendChild(chgRow);
+wrap.appendChild(card);
+
+const newBtn = el("button", {class:"new-sale-btn"}, "🛒 New Sale");
+newBtn.addEventListener("click", ()=>{ state.cart=[]; state.paid=0; state.screen="shop"; render(); });
+wrap.appendChild(newBtn);
+
+const repBtn = el("button", {class:"view-report-btn"}, "View Sales Report →");
+repBtn.addEventListener("click", ()=>{ state.salesOpen=true; render(); });
+wrap.appendChild(repBtn);
+return wrap;
+```
+
+}
+
+function renderSales() {
+const totalEarned = state.sales.reduce((s,x)=>s+x.total,0);
+const wrap = el(“div”, {class:“report-screen”});
+wrap.appendChild(topBar(“📊 Sales Report”, ()=>{ state.salesOpen=false; render(); }));
+
+```
+const stats = el("div", {class:"report-stats"});
+const s1 = el("div", {class:"stat-card"}); s1.appendChild(el("div",{class:"stat-val",style:{color:"#0EA5E9"}},String(state.sales.length))); s1.appendChild(el("div",{class:"stat-label"},"Transactions")); stats.appendChild(s1);
+const s2 = el("div", {class:"stat-card"}); s2.appendChild(el("div",{class:"stat-val",style:{color:"#16A34A"}},fmt(totalEarned))); s2.appendChild(el("div",{class:"stat-label"},"Total Earned")); stats.appendChild(s2);
+wrap.appendChild(stats);
+
+const list = el("div", {class:"sales-list"});
+if (state.sales.length === 0) {
+  list.appendChild(el("div", {class:"no-sales"}, "No sales yet! Start selling 🎉"));
+} else {
+  state.sales.forEach((sale, idx) => {
+    const card = el("div", {class:"sale-card"});
+    const hdr = el("div", {class:"sale-card-header"});
+    hdr.appendChild(el("span",{class:"sale-badge"},"Sale #"+(state.sales.length-idx)));
+    hdr.appendChild(el("span",{class:"sale-time"},sale.time));
+    card.appendChild(hdr);
+    for (const i of sale.items) {
+      const row = el("div",{class:"sale-item-row"});
+      row.appendChild(el("span",{},i.emoji+" "+i.name+" x"+i.qty));
+      row.appendChild(el("span",{},fmt(i.price*i.qty)));
+      card.appendChild(row);
+    }
+    const tot = el("div",{class:"sale-total-row"});
+    tot.appendChild(el("span",{},"Total")); tot.appendChild(el("span",{},fmt(sale.total)));
+    card.appendChild(tot);
+    list.appendChild(card);
+  });
+}
+wrap.appendChild(list);
+return wrap;
+```
+
+}
+
+render();
+</script>
+
+</body>
 </html>
