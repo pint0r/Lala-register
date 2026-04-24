@@ -1,2 +1,0 @@
-# Lala-register
-Register
